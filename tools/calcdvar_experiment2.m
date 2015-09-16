@@ -1,4 +1,4 @@
-function [ dvar1, dvar2 ] = calcdvar_experiment2( signal, sigcst, rngseeds, template )
+function dvar = calcdvar_experiment2( signal, sigcst, rngseeds, template )
 
 % CALCDVAR_EXPERIMENT2  Calculate decision variables in experiment 2
 % 
@@ -25,7 +25,6 @@ noisestd = 0.20;   % noise standard deviation, in contrast units
 
 % initialize proxy decision variables for the two stimulus intervals
 dvar1 = NaN([ size(signal,1) 1 ]);
-dvar2 = dvar1;
 
 % step through trials
 for t=1:size(signal,1)
@@ -37,7 +36,7 @@ for t=1:size(signal,1)
 	% reconstruct signal
     sig = (basecst+sigcst(t))*leftdot + basecst*fliplr(leftdot);  % signal with dot on left
     if signal(t)==2
-        sig = fliplr(sig);  % if dot should be on right, flip it
+        sig = zeros(size(template));
     end
     
     % reconstruct noise
@@ -47,10 +46,11 @@ for t=1:size(signal,1)
     stim = sig + noise;
     
     % get left and right proxy decision variables
-    dvar1(t) = sum(sum( stim.*template ));
-    dvar2(t) = sum(sum( stim.*fliplr(template) ));
+    dvar(t) = sum(sum( stim.*template));
 
 end
+
+dvar = dvar';
 
 end
 

@@ -1,4 +1,4 @@
-function cimage = calcclass_experiment2( signal, response, rngseeds )
+function [cimage,cbin,ntrials] = calcclass_experiment2( signal, response, rngseeds )
 
 % CALCCLASS_EXPERIMENT2  Calculate classification image for experiment 2
 % 
@@ -19,8 +19,8 @@ noisestd = 0.20;   % noise standard deviation, in contrast units
 radiusP = 6;       % radius, in pixels, of the circle outside which we set the classification image to zero
 
 % initialize classification image bins
-cbin = repmat( { zeros(stimheightP,stimwidthP) }, [ 2 2 ] );  % sum of stimulus noise on trials where stimulus order is i and observer's response is j
-ntrials = zeros(2,2);                                         % count of number of trials in this bin
+cbin = repmat( { zeros(stimheightP,stimwidthP) }, [ 4 1 ] );  % sum of stimulus noise on trials where stimulus order is i and observer's response is j
+ntrials = zeros(4,1);                                         % count of number of trials in this bin
 
 % step through trials
 for t=1:size(signal,1)
@@ -33,13 +33,29 @@ for t=1:size(signal,1)
     noise = cnormrnd2(0,noisestd,stimheightP,stimwidthP);
     
     % add noise field to appropriate bin
-    cbin{signal(t),response(t)} = cbin{signal(t),response(t)} + noise;
-    ntrials(signal(t),response(t)) = ntrials(signal(t),response(t)) + 1;
+    if signal(t) == 1 && response(t) == 1 % sig ON and resp is YES - hit
+        cbin{1} = cbin{1} + noise;
+        ntrials(1) = ntrials(1) + 1;
+        
+    elseif signal(t) == 1 && response(t) == 2 % sig ON, resp NO - miss
+        cbin{2} = cbin{2} + noise;
+        ntrials(2) = ntrials(2) + 1;
+        
+    elseif signal(t) == 2 && response(t) == 1 % sig OFF, resp YES - fa
+        cbin{3} = cbin{3} + noise;
+        ntrials(3) = ntrials(3) + 1;
+        
+    elseif signal(t) == 2 && response(t) == 2 % sig OFF, resp NO - cr
+        cbin{4} = cbin{4} + noise;
+        ntrials(4) = ntrials(4) + 1;
+
+    end
     
 end
 
 % calculate classification image
-cim = ( cbin{1,1}/ntrials(1,1) + cbin{2,1}/ntrials(2,1) ) - ( cbin{1,2}/ntrials(1,2) + cbin{2,2}/ntrials(2,2) );
+cim = ( cbin{1}/ntrials(1) + fliplr(cbin{4})/ntrials(4) ) - ( cbin{2}/ntrials(2) + fliplr(cbin{3})/ntrials(3) );
+% cim = cbin{1}/ntrials(1) -  cbin{3}/ntrials(3);
 
 % get maps of distance in pixels from centres of signals
 rleft =  distmap( [ stimheightP stimwidthP ], [ 20 20 ] );  % left dot is centred at matrix element (20,20)
